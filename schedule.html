@@ -285,5 +285,86 @@
     loadStudentOptions();
     renderSchedules();
   </script>
+  <!-- Cụm giao diện Sao lưu & Khôi phục -->
+<section class="card" style="margin: 16px; padding: 16px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+  <h3 style="margin-bottom: 12px; font-size: 1rem; color: #333;">Quản lý dữ liệu (Sao lưu & Khôi phục)</h3>
+  
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    <!-- Nút Xuất/Tải dữ liệu về -->
+    <button id="btn-export" type="button" style="padding: 10px 16px; background-color: #34c759; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+      📥 Tải về file Sao lưu (.json)
+    </button>
+
+    <!-- Nút Nhập dữ liệu từ file -->
+    <label for="import-file" style="padding: 10px 16px; background-color: #007aff; color: white; border-radius: 8px; font-weight: 600; text-align: center; cursor: pointer;">
+      📤 Nhập dữ liệu từ file Sao lưu
+    </label>
+    <input type="file" id="import-file" accept=".json" style="display: none;">
+  </div>
+</section>
+
+<script>
+  // 1. HÀM XUẤT DỮ LIỆU TỪ LOCALSTORAGE RA FILE .JSON
+  document.getElementById('btn-export').addEventListener('click', () => {
+    // Gom tất cả các dữ liệu hiện có trong localStorage
+    const backupData = {
+      students: JSON.parse(localStorage.getItem('students')) || [],
+      schedules: JSON.parse(localStorage.getItem('schedules')) || [],
+      attendance: JSON.parse(localStorage.getItem('attendance')) || [],
+      makeup_schedules: JSON.parse(localStorage.getItem('makeup_schedules')) || [],
+      exportDate: new Date().toISOString()
+    };
+
+    // Chuyển dữ liệu thành chuỗi JSON
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+    
+    // Tạo thẻ <a> ảo để kích hoạt tải file về máy
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    
+    // Đặt tên file theo ngày tháng hiện tại (ví dụ: sao_luu_lich_day_2026-10-06.json)
+    const todayStr = new Date().toISOString().split('T')[0];
+    downloadAnchor.setAttribute("download", `sao_luu_lich_day_${todayStr}.json`);
+    
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  });
+
+  // 2. HÀM NHẬP DỮ LIỆU TỪ FILE .JSON VÀO LOCALSTORAGE
+  document.getElementById('import-file').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const importedData = JSON.parse(e.target.result);
+
+        // Kiểm tra tính hợp lệ sơ bộ của file
+        if (!importedData.students && !importedData.schedules) {
+          alert("File không đúng định dạng sao lưu của ứng dụng!");
+          return;
+        }
+
+        const confirmRestore = confirm("Bạn có chắc chắn muốn ghi đè dữ liệu hiện tại bằng dữ liệu từ file này không?");
+        if (!confirmRestore) return;
+
+        // Lưu ngược lại vào localStorage
+        if (importedData.students) localStorage.setItem('students', JSON.stringify(importedData.students));
+        if (importedData.schedules) localStorage.setItem('schedules', JSON.stringify(importedData.schedules));
+        if (importedData.attendance) localStorage.setItem('attendance', JSON.stringify(importedData.attendance));
+        if (importedData.makeup_schedules) localStorage.setItem('makeup_schedules', JSON.stringify(importedData.makeup_schedules));
+
+        alert("Khôi phục dữ liệu thành công!");
+        location.reload(); // Tải lại trang để cập nhật giao diện mới
+      } catch (err) {
+        alert("Lỗi khi đọc file! Vui lòng chọn đúng file .json đã xuất trước đó.");
+      }
+    };
+
+    reader.readAsText(file);
+  });
+</script>
 </body>
 </html>

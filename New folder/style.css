@@ -1,0 +1,118 @@
+:root {
+  --page-bg: #a0a0a0;
+  --frame-bg: #ffffff;
+  --panel: #d9d9d9;
+  --text: #1a1a1a;
+  --accept: #73c46a;
+  --decline: #dc2222;
+  --radius-lg: 22px;
+  --radius-pill: 28px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 12px;
+}
+
+/* Khung điện thoại */
+.phone {
+  width: 100%;
+  max-width: 380px;
+  min-height: 440px;
+  background: var(--frame-bg);
+  border-right: 2px solid #000;
+  padding: 0 16px 28px;
+}
+
+/* Thanh trên cùng + nút menu */
+.topbar { padding: 10px 0 6px; }
+
+.menu-btn {
+  width: 32px;
+  height: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.menu-btn span {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: #b9b9b9;
+}
+.menu-btn:focus-visible,
+.btn:focus-visible { outline: 3px solid #1a73e8; outline-offset: 2px; }
+
+/* Thẻ lịch dạy */
+.schedule-card {
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  height: 136px;
+  margin: 14px 0 20px;
+  padding-top: 18px;
+  text-align: center;
+}
+.schedule-card h1 {
+  font-size: 1.125rem;
+  font-weight: 400;
+}
+
+/* Mỗi buổi học */
+.lesson { margin-bottom: 6px; }
+
+.lesson-time {
+  font-size: 1.0625rem;
+  margin: 0 0 6px 5px;
+}
+
+.lesson-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel);
+  border-radius: var(--radius-pill);
+  padding: 14px 14px 14px 14px;
+}
+
+.student-name {
+  flex: 1;
+  background: #fff;
+  padding: 10px 14px;
+  font-size: 1.0625rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Nút đồng ý / từ chối */
+.btn {
+  width: 32px;
+  height: 22px;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.btn:hover { filter: brightness(0.92); }
+.btn:active { transform: scale(0.94); }
+.btn-accept  { background: var(--accept); }
+.btn-decline { background: var(--decline); }
+
+@media (max-width: 400px) {
+  body { padding: 0; }
+  .phone { max-width: none; border-right: 0; }
+}

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quản lý Học sinh</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+  <div class="phone">
+    <header class="topbar">
+      <button class="menu-btn" id="menu-btn" aria-label="Mở menu">
+        <span></span><span></span><span></span>
+      </button>
+      <h2 class="page-title">Quản lý Học sinh</h2>
+    </header>
+
+    <main class="content">
+      <!-- Form Thêm / Sửa Học Sinh -->
+      <section class="form-card">
+        <h3 id="form-title" style="margin-bottom: 12px; font-size: 1rem;">Thêm học sinh mới</h3>
+        <form id="student-form">
+          <input type="hidden" id="student-id">
+          
+          <div class="form-group">
+            <label for="student-name">Họ và tên *</label>
+            <input type="text" id="student-name" class="form-input" placeholder="Nhập tên học sinh" required>
+          </div>
+
+          <div class="form-group">
+            <label for="student-level">Trình độ / Lớp học *</label>
+            <input type="text" id="student-level" class="form-input" placeholder="VD: Lớp 10 - Ôn thi ĐH" required>
+          </div>
+
+          <div class="form-group">
+            <label for="student-phone">Số điện thoại</label>
+            <input type="tel" id="student-phone" class="form-input" placeholder="Nhập SĐT liên hệ">
+          </div>
+
+          <button type="submit" class="btn-submit" id="btn-save">Lưu học sinh</button>
+          <button type="button" class="btn-submit btn-cancel" id="btn-cancel">Hủy chỉnh sửa</button>
+        </form>
+      </section>
+
+      <!-- Danh sách học sinh -->
+      <section class="list-card">
+        <h3 style="margin-bottom: 12px; font-size: 1rem;">Danh sách học sinh</h3>
+        <div id="student-list"></div>
+      </section>
+    </main>
+
+    <!-- Overlay & Menu Drawer -->
+    <div class="overlay" id="overlay" hidden></div>
+    <nav class="drawer" id="menu" aria-label="Menu chính" aria-hidden="true">
+      <button class="drawer-close" id="menu-close" aria-label="Đóng menu">&times;</button>
+      <ul>
+        <li><a href="index.html">Trang chủ</a></li>
+        <li><a href="schedule.html">Cập nhật lịch dạy</a></li>
+        <li><a href="#" class="is-active" aria-current="page">Thêm học sinh</a></li>
+        <li><a href="stats.html">Tổng buổi dạy</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <script>
+    // --- LẤY DỮ LIỆU TỪ LOCALSTORAGE ---
+    function getStudents() {
+      return JSON.parse(localStorage.getItem('students')) || [];
+    }
+
+    function saveStudents(data) {
+      localStorage.setItem('students', JSON.stringify(data));
+    }
+
+    // --- HIỂN THỊ DANH SÁCH ---
+    function renderStudents() {
+      const students = getStudents();
+      const listEl = document.getElementById('student-list');
+
+      if (students.length === 0) {
+        listEl.innerHTML = '<p class="empty-state">Chưa có học sinh nào trong danh sách</p>';
+        return;
+      }
+
+      listEl.innerHTML = students.map(s => `
+        <div class="student-item">
+          <div class="student-info">
+            <h4>${s.name}</h4>
+            <p><strong>Trình độ:</strong> ${s.level}</p>
+            ${s.phone ? `<p><strong>SĐT:</strong> ${s.phone}</p>` : ''}
+          </div>
+          <div class="action-btns">
+            <button class="btn-action btn-edit" onclick="editStudent('${s.id}')">Sửa</button>
+            <button class="btn-action btn-delete" onclick="deleteStudent('${s.id}')">Xóa</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- THÊM HOẶC CẬP NHẬT HỌC SINH ---
+    const form = document.getElementById('student-form');
+    const idInput = document.getElementById('student-id');
+    const nameInput = document.getElementById('student-name');
+    const levelInput = document.getElementById('student-level');
+    const phoneInput = document.getElementById('student-phone');
+    const formTitle = document.getElementById('form-title');
+    const btnCancel = document.getElementById('btn-cancel');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const students = getStudents();
+      const id = idInput.value;
+
+      if (id) {
+        // Cập nhật thông tin học sinh cũ
+        const index = students.findIndex(s => s.id === id);
+        if (index !== -1) {
+          students[index] = {
+            id,
+            name: nameInput.value.trim(),
+            level: levelInput.value.trim(),
+            phone: phoneInput.value.trim()
+          };
+        }
+      } else {
+        // Thêm học sinh mới
+        const newStudent = {
+          id: 'hs_' + Date.now(),
+          name: nameInput.value.trim(),
+          level: levelInput.value.trim(),
+          phone: phoneInput.value.trim()
+        };
+        students.push(newStudent);
+      }
+
+      saveStudents(students);
+      resetForm();
+      renderStudents();
+    });
+
+    // --- CHỈNH SỬA HỌC SINH ---
+    window.editStudent = function(id) {
+      const students = getStudents();
+      const student = students.find(s => s.id === id);
+      if (!student) return;
+
+      idInput.value = student.id;
+      nameInput.value = student.name;
+      levelInput.value = student.level;
+      phoneInput.value = student.phone || '';
+
+      formTitle.textContent = 'Chỉnh sửa thông tin học sinh';
+      btnCancel.style.display = 'block';
+      nameInput.focus();
+    };
+
+    // --- XÓA HỌC SINH VÀ TẤT CẢ LỊCH DẠY LIÊN QUAN ---
+    window.deleteStudent = function(id) {
+      if (confirm('Xóa học sinh này sẽ xóa toàn bộ lịch dạy liên quan. Bạn có chắc chắn muốn xóa?')) {
+        // 1. Xóa học sinh khỏi danh sách
+        let students = getStudents();
+        students = students.filter(s => s.id !== id);
+        saveStudents(students);
+
+        // 2. Xóa tất cả lịch dạy liên quan đến học sinh này
+        let schedules = JSON.parse(localStorage.getItem('schedules')) || [];
+        schedules = schedules.filter(s => s.studentId !== id);
+        localStorage.setItem('schedules', JSON.stringify(schedules));
+
+        // 3. Cập nhật lại giao diện
+        renderStudents();
+      }
+    };
+    // --- RESET FORM ---
+    function resetForm() {
+      idInput.value = '';
+      form.reset();
+      formTitle.textContent = 'Thêm học sinh mới';
+      btnCancel.style.display = 'none';
+    }
+
+    btnCancel.addEventListener('click', resetForm);
+
+    // --- MENU SIDEBAR ---
+    const menuBtn = document.getElementById("menu-btn");
+    const drawer = document.getElementById("menu");
+    const overlay = document.getElementById("overlay");
+
+    function setMenu(open) {
+      drawer.classList.toggle("is-open", open);
+      drawer.setAttribute("aria-hidden", String(!open));
+      overlay.hidden = !open;
+    }
+
+    menuBtn.addEventListener("click", () => setMenu(true));
+    document.getElementById("menu-close").addEventListener("click", () => setMenu(false));
+    overlay.addEventListener("click", () => setMenu(false));
+
+    // Khởi chạy ban đầu
+    renderStudents();
+  </script>
+</body>
+</html>

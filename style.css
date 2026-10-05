@@ -1,0 +1,552 @@
+/* ==========================================
+   1. CẤU HÌNH CHUNG & BIẾN CSS (VARIABLES)
+   ========================================== */
+:root {
+  --bg: #f4f6f8;
+  --panel: #ffffff;
+  --text: #1f2937;
+  --text-sub: #6b7280;
+  --primary: #1a73e8;
+  --primary-hover: #1557b0;
+  --danger: #dc2222;
+  --danger-hover: #b91c1c;
+  --success: #137333;
+  --success-bg: #e6f4ea;
+  --radius-lg: 16px;
+  --radius-md: 8px;
+  --border-color: #e5e7eb;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: #e5e7eb;
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* ==========================================
+   2. KHUNG DẠNG ĐIỆN THOẠI (PHONE FRAME)
+   ========================================== */
+.phone {
+  width: 100%;
+  max-width: 414px;
+  height: 100vh;
+  max-height: 896px;
+  background-color: var(--bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 415px) {
+  .phone {
+    height: 90vh;
+    border-radius: 24px;
+  }
+}
+
+/* ==========================================
+   3. TOPBAR & DRAWER MENU
+   ========================================== */
+.topbar {
+  background: var(--panel);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.page-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.menu-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+}
+
+.menu-btn span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background-color: var(--text);
+  border-radius: 2px;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.drawer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -260px;
+  width: 260px;
+  background: var(--panel);
+  z-index: 20;
+  padding: 20px;
+  transition: transform 0.3s ease;
+}
+
+.drawer.is-open {
+  transform: translateX(260px);
+}
+
+.drawer-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  float: right;
+}
+
+.drawer ul {
+  list-style: none;
+  margin-top: 40px;
+}
+
+.drawer li {
+  margin-bottom: 16px;
+}
+
+.drawer a {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 500;
+  display: block;
+  padding: 8px;
+  border-radius: var(--radius-md);
+}
+
+.drawer a.is-active {
+  background: #e8f0fe;
+  color: var(--primary);
+}
+
+/* ==========================================
+   4. NỘI DUNG CHÍNH (MAIN CONTENT)
+   ========================================== */
+.content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+/* ==========================================
+   5. LỊCH TUẦN & DANH SÁCH BUỔI DẠY (INDEX)
+   ========================================== */
+.schedule-card {
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.week-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.week-header h1 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.week-nav {
+  background: #f3f4f6;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.day {
+  background: transparent;
+  border: none;
+  padding: 8px 4px;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.day-name {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  margin-bottom: 4px;
+}
+
+.day-num {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.day.is-today {
+  background: #e8f0fe;
+  color: var(--primary);
+}
+
+.day.is-selected {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.day.is-selected .day-name {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.today-btn {
+  width: 100%;
+  padding: 8px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.day-heading {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-sub);
+}
+
+.lesson {
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.lesson-time {
+  font-size: 0.8125rem;
+  color: var(--text-sub);
+  margin-bottom: 8px;
+}
+
+.lesson-time strong {
+  color: var(--primary);
+}
+
+.lesson-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+/* Nút xác nhận xanh / từ chối đỏ */
+.btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  margin-left: 6px;
+  position: relative;
+}
+
+.btn-accept {
+  background-color: var(--success);
+}
+
+.btn-accept::before {
+  content: "✓";
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.btn-decline {
+  background-color: var(--danger);
+}
+
+.btn-decline::before {
+  content: "✕";
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-sub);
+  font-size: 0.875rem;
+  padding: 24px 0;
+}
+
+/* ==========================================
+   6. BADGES TRẠNG THÁI (STATUS BADGES)
+   ========================================== */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-completed {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.badge-cancelled {
+  background: #fce8e6;
+  color: var(--danger);
+}
+
+.badge-day {
+  background: #e8f0fe;
+  color: var(--primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ==========================================
+   7. FORM VÀ THỐNG KÊ (SCHEDULE / STUDENTS / STATS)
+   ========================================== */
+.form-card, .list-card, .stat-card {
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.form-input:focus, .form-select:focus {
+  border-color: var(--primary);
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 10px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.btn-cancel {
+  background: #eee;
+  color: var(--text);
+  display: none;
+}
+
+.schedule-item, .student-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.schedule-item:last-child, .student-item:last-child {
+  border-bottom: none;
+}
+
+.action-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-action {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.btn-edit { background: #e8f0fe; color: var(--primary); }
+.btn-delete { background: #fce8e6; color: var(--danger); }
+
+/* Thống kê Tổng buổi dạy */
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.stat-header h4 { font-size: 1rem; color: var(--text); }
+.stat-total { font-size: 1.125rem; font-weight: 700; color: var(--primary); }
+.stat-detail { font-size: 0.8125rem; color: var(--text-sub); line-height: 1.5; }
+
+/* ==========================================
+   8. MODAL POPUP HỦY CA & DẠY BÙ (CHỈ BẬT KHI BẤM NÚT ĐỎ)
+   ========================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  width: 100%;
+  max-width: 320px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(20px);
+  transition: transform 0.25s ease;
+}
+
+.modal-overlay.is-active .modal-card {
+  transform: translateY(0);
+}
+
+.modal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.modal-text {
+  font-size: 0.875rem;
+  color: var(--text-sub);
+  margin-bottom: 14px;
+}
+
+.modal-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.modal-input:focus {
+  border-color: var(--primary);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  flex-direction: column;
+}
+
+.btn-modal {
+  padding: 10px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-modal-primary { background: var(--primary); color: #fff; }
+.btn-modal-primary:hover { background: var(--primary-hover); }
+
+.btn-modal-danger { background: var(--danger); color: #fff; }
+.btn-modal-danger:hover { background: var(--danger-hover); }
+
+.btn-modal-secondary { background: #f3f4f6; color: var(--text); }
+.btn-modal-secondary:hover { background: #e5e7eb; }

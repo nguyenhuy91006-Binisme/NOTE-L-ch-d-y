@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thêm & Quản lý Học Sinh</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="phone">
+    <header class="topbar">
+      <button class="menu-btn" id="menu-btn"><span></span><span></span><span></span></button>
+      <h2 class="page-title">Quản lý học sinh</h2>
+    </header>
+
+    <main class="content">
+      <!-- Form thêm / sửa học sinh -->
+      <section class="form-card">
+        <h3 id="form-title" class="section-title">Thêm học sinh mới</h3>
+        <form id="student-form">
+          <input type="hidden" id="student-id">
+          
+          <div class="form-group">
+            <label for="student-name">Tên học sinh</label>
+            <input type="text" id="student-name" required placeholder="Nhập họ tên...">
+          </div>
+
+          <div class="form-group">
+            <label for="student-level">Trình độ đang học</label>
+            <input type="text" id="student-level" placeholder="VD: Khá, Lớp 10, IELTS 5.0...">
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="submit-btn" id="save-btn">Lưu học sinh</button>
+            <button type="button" class="cancel-btn" id="cancel-btn" hidden>Hủy</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Danh sách học sinh -->
+      <section class="list-card">
+        <h3 class="section-title">Danh sách học sinh</h3>
+        <div id="student-list" class="item-list"></div>
+      </section>
+    </main>
+
+    <div class="overlay" id="overlay" hidden></div>
+    <nav class="drawer" id="menu">
+      <button class="drawer-close" id="menu-close">&times;</button>
+      <ul>
+        <li><a href="index.html">Trang chủ</a></li>
+        <li><a href="lich-day.html">Cập nhật lịch dạy</a></li>
+        <li><a href="hoc-sinh.html" class="is-active">Thêm học sinh</a></li>
+        <li><a href="#">Tổng buổi dạy</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <script>
+    let students = JSON.parse(localStorage.getItem("students")) || [];
+
+    const form = document.getElementById("student-form");
+    const nameInput = document.getElementById("student-name");
+    const levelInput = document.getElementById("student-level");
+    const idInput = document.getElementById("student-id");
+    const cancelBtn = document.getElementById("cancel-btn");
+    const formTitle = document.getElementById("form-title");
+    const listEl = document.getElementById("student-list");
+
+    function saveToStorage() {
+      localStorage.setItem("students", JSON.stringify(students));
+    }
+
+    function renderList() {
+      if (students.length === 0) {
+        listEl.innerHTML = '<p class="empty-state">Chưa có học sinh nào</p>';
+        return;
+      }
+
+      listEl.innerHTML = students.map(s => `
+        <div class="list-item">
+          <div class="item-info">
+            <strong>${s.name}</strong>
+            <span class="sub-text">Trình độ: ${s.level || "Chưa nhập"}</span>
+          </div>
+          <div class="item-actions">
+            <button onclick="editStudent('${s.id}')" class="icon-btn edit-btn">Sửa</button>
+            <button onclick="deleteStudent('${s.id}')" class="icon-btn delete-btn">Xóa</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const id = idInput.value;
+      const name = nameInput.value.trim();
+      const level = levelInput.value.trim();
+
+      if (!name) return;
+
+      if (id) {
+        // Cập nhật học sinh cũ
+        const index = students.findIndex(s => s.id === id);
+        if (index !== -1) {
+          students[index] = { id, name, level };
+        }
+      } else {
+        // Thêm học sinh mới
+        const newStudent = { id: Date.now().toString(), name, level };
+        students.push(newStudent);
+      }
+
+      saveToStorage();
+      resetForm();
+      renderList();
+    });
+
+    window.editStudent = function(id) {
+      const student = students.find(s => s.id === id);
+      if (!student) return;
+      idInput.value = student.id;
+      nameInput.value = student.name;
+      levelInput.value = student.level;
+      formTitle.textContent = "Chỉnh sửa học sinh";
+      cancelBtn.hidden = false;
+    };
+
+    window.deleteStudent = function(id) {
+      if (confirm("Bạn có chắc chắn muốn xóa học sinh này?")) {
+        students = students.filter(s => s.id !== id);
+        saveToStorage();
+        renderList();
+      }
+    };
+
+    function resetForm() {
+      idInput.value = "";
+      nameInput.value = "";
+      levelInput.value = "";
+      formTitle.textContent = "Thêm học sinh mới";
+      cancelBtn.hidden = true;
+    }
+
+    cancelBtn.addEventListener("click", resetForm);
+
+    renderList();
+
+    /* Menu Drawer */
+    const menuBtn = document.getElementById("menu-btn");
+    const drawer = document.getElementById("menu");
+    const overlay = document.getElementById("overlay");
+    menuBtn.addEventListener("click", () => { drawer.classList.add("is-open"); overlay.hidden = false; });
+    document.getElementById("menu-close").addEventListener("click", () => { drawer.classList.remove("is-open"); overlay.hidden = true; });
+    overlay.addEventListener("click", () => { drawer.classList.remove("is-open"); overlay.hidden = true; });
+  </script>
+</body>
+</html>

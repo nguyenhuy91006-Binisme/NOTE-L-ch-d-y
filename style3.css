@@ -1,0 +1,111 @@
+/* CSS riêng cho trang Cập nhật Lịch dạy */
+.form-card, .list-card {
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  outline: none;
+  background-color: #fff;
+}
+
+.form-input:focus, .form-select:focus {
+  border-color: #1a73e8;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 10px;
+  background: #1a73e8;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.btn-submit:hover {
+  opacity: 0.9;
+}
+
+.schedule-item {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.schedule-info h4 {
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+
+.schedule-info p {
+  font-size: 0.8125rem;
+  color: #666;
+}
+
+.badge-day {
+  display: inline-block;
+  background: #e8f0fe;
+  color: #1a73e8;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  margin-right: 4px;
+}
+
+.action-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-action {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: #fff;
+}
+
+.btn-edit { background: #f39c12; }
+.btn-delete { background: var(--decline); }
+.btn-cancel {
+  background: #7f8c8d;
+  margin-top: 6px;
+  display: none;
+}

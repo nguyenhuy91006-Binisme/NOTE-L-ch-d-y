@@ -1,0 +1,85 @@
+/* CSS riêng cho trang Quản lý Học sinh */
+.form-card, .list-card {
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  outline: none;
+}
+.form-input:focus {
+  border-color: #1a73e8;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 10px;
+  background: #1a73e8;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 6px;
+}
+.btn-submit:hover { opacity: 0.9; }
+
+.student-item {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-info h4 {
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+
+.student-info p {
+  font-size: 0.8125rem;
+  color: #666;
+}
+
+.action-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-action {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: #fff;
+}
+.btn-edit { background: #f39c12; }
+.btn-delete { background: #FF3D41; }
+.btn-cancel {
+  background: #7f8c8d;
+  margin-top: 6px;
+  display: none;
+}

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cập nhật Lịch dạy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="phone">
+    <header class="topbar">
+      <button class="menu-btn" id="menu-btn"><span></span><span></span><span></span></button>
+      <h2 class="page-title">Cập nhật lịch dạy</h2>
+    </header>
+
+    <main class="content">
+      <!-- Form Xếp Lịch Dạy -->
+      <section class="form-card">
+        <h3 class="section-title">Thêm ca dạy</h3>
+        <form id="schedule-form">
+          <div class="form-group">
+            <label for="select-student">Chọn học sinh</label>
+            <select id="select-student" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="select-day">Thứ trong tuần</label>
+            <select id="select-day" required>
+              <option value="0">Thứ Hai</option>
+              <option value="1">Thứ Ba</option>
+              <option value="2">Thứ Tư</option>
+              <option value="3">Thứ Năm</option>
+              <option value="4">Thứ Sáu</option>
+              <option value="5">Thứ Bảy</option>
+              <option value="6">Chủ Nhật</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="select-time">Giờ bắt đầu</label>
+            <input type="time" id="select-time" required>
+          </div>
+
+          <button type="submit" class="submit-btn">Thêm ca dạy</button>
+        </form>
+      </section>
+
+      <!-- Danh sách lịch dạy hiện tại -->
+      <section class="list-card">
+        <h3 class="section-title">Lịch dạy hiện tại</h3>
+        <div id="schedule-list" class="item-list"></div>
+      </section>
+    </main>
+
+    <div class="overlay" id="overlay" hidden></div>
+    <nav class="drawer" id="menu">
+      <button class="drawer-close" id="menu-close">&times;</button>
+      <ul>
+        <li><a href="index.html">Trang chủ</a></li>
+        <li><a href="lich-day.html" class="is-active">Cập nhật lịch dạy</a></li>
+        <li><a href="hoc-sinh.html">Thêm học sinh</a></li>
+        <li><a href="#">Tổng buổi dạy</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <script>
+    const DAY_FULL = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ nhật"];
+
+    let students = JSON.parse(localStorage.getItem("students")) || [];
+    let schedules = JSON.parse(localStorage.getItem("schedules")) || [];
+
+    const studentSelect = document.getElementById("select-student");
+    const scheduleForm = document.getElementById("schedule-form");
+    const scheduleList = document.getElementById("schedule-list");
+
+    // Load danh sách học sinh vào Dropdown
+    function loadStudentOptions() {
+      if (students.length === 0) {
+        studentSelect.innerHTML = '<option value="">-- Cần thêm học sinh trước --</option>';
+        return;
+      }
+      studentSelect.innerHTML = students.map(s => `
+        <option value="${s.id}">${s.name} ${s.level ? `(${s.level})` : ''}</option>
+      `).join("");
+    }
+
+    function saveSchedules() {
+      localStorage.setItem("schedules", JSON.stringify(schedules));
+    }
+
+    function renderSchedules() {
+      if (schedules.length === 0) {
+        scheduleList.innerHTML = '<p class="empty-state">Chưa có ca dạy nào được tạo</p>';
+        return;
+      }
+
+      // Sắp xếp theo ngày và thời gian
+      schedules.sort((a, b) => a.day - b.day || a.time.localeCompare(b.time));
+
+      scheduleList.innerHTML = schedules.map(s => {
+        const student = students.find(st => st.id === s.studentId);
+        const name = student ? student.name : "Học sinh đã xóa";
+
+        return `
+          <div class="list-item">
+            <div class="item-info">
+              <strong>${DAY_FULL[s.day]} - ${s.time}</strong>
+              <span class="sub-text">Học sinh: ${name}</span>
+            </div>
+            <button onclick="deleteSchedule('${s.id}')" class="icon-btn delete-btn">Xóa</button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    scheduleForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const studentId = studentSelect.value;
+      const day = parseInt(document.getElementById("select-day").value);
+      const time = document.getElementById("select-time").value;
+
+      if (!studentId) {
+        alert("Vui lòng thêm học sinh trước khi tạo lịch dạy!");
+        return;
+      }
+
+      const newSchedule = {
+        id: Date.now().toString(),
+        studentId,
+        day,
+        time
+      };
+
+      schedules.push(newSchedule);
+      saveSchedules();
+      renderSchedules();
+    });
+
+    window.deleteSchedule = function(id) {
+      if (confirm("Xóa ca dạy này?")) {
+        schedules = schedules.filter(s => s.id !== id);
+        saveSchedules();
+        renderSchedules();
+      }
+    };
+
+    loadStudentOptions();
+    renderSchedules();
+
+    /* Menu Drawer */
+    const menuBtn = document.getElementById("menu-btn");
+    const drawer = document.getElementById("menu");
+    const overlay = document.getElementById("overlay");
+    menuBtn.addEventListener("click", () => { drawer.classList.add("is-open"); overlay.hidden = false; });
+    document.getElementById("menu-close").addEventListener("click", () => { drawer.classList.remove("is-open"); overlay.hidden = true; });
+    overlay.addEventListener("click", () => { drawer.classList.remove("is-open"); overlay.hidden = true; });
+  </script>
+</body>
+</html>

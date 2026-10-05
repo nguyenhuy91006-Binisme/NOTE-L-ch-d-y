@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tổng Buổi Dạy</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style4.css">
+</head>
+<body>
+  <div class="phone">
+    <header class="topbar">
+      <button class="menu-btn" id="menu-btn" aria-label="Mở menu">
+        <span></span><span></span><span></span>
+      </button>
+      <h2 class="page-title">Tổng buổi dạy</h2>
+    </header>
+
+    <main class="content">
+      <section style="background: var(--panel); border-radius: var(--radius-lg); padding: 16px;">
+        <h3 style="margin-bottom: 14px; font-size: 1rem;">Thống kê theo học sinh</h3>
+        <div id="stats-list"></div>
+      </section>
+    </main>
+
+    <!-- Overlay & Menu Drawer -->
+    <div class="overlay" id="overlay" hidden></div>
+    <nav class="drawer" id="menu" aria-label="Menu chính" aria-hidden="true">
+      <button class="drawer-close" id="menu-close" aria-label="Đóng menu">&times;</button>
+      <ul>
+        <li><a href="index.html">Trang chủ</a></li>
+        <li><a href="schedule.html">Cập nhật lịch dạy</a></li>
+        <li><a href="students.html">Thêm học sinh</a></li>
+        <li><a href="stats.html" class="is-active" aria-current="page">Tổng buổi dạy</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <script>
+    function getStudents() { return JSON.parse(localStorage.getItem('students')) || []; }
+    function getAttendance() { return JSON.parse(localStorage.getItem('attendance')) || []; }
+
+    function renderStats() {
+      const students = getStudents();
+      const attendance = getAttendance();
+      const listEl = document.getElementById('stats-list');
+
+      if (students.length === 0) {
+        listEl.innerHTML = '<p class="empty-state">Chưa có dữ liệu học sinh</p>';
+        return;
+      }
+
+      listEl.innerHTML = students.map(s => {
+        // Lọc danh sách buổi dạy đã xác định của học sinh này
+        const studentAtt = attendance.filter(a => a.studentId === s.id && a.status === 'completed');
+        
+        // Tính tổng số buổi thực tế
+        const totalSessions = studentAtt.reduce((sum, item) => sum + (item.sessionCount || 1), 0);
+        const cancelledCount = attendance.filter(a => a.studentId === s.id && a.status === 'cancelled').length;
+
+        return `
+          <div class="stat-card">
+            <div class="stat-header">
+              <h4>${s.name}</h4>
+              <span class="stat-total">${totalSessions} buổi</span>
+            </div>
+            <div class="stat-detail">
+              <p><strong>Trình độ:</strong> ${s.level}</p>
+              <p><strong>Đã dạy thành công:</strong> ${studentAtt.length} ca</p>
+              <p><strong>Số ca đã hủy:</strong> ${cancelledCount} ca</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Menu Sidebar
+    const menuBtn = document.getElementById("menu-btn");
+    const drawer = document.getElementById("menu");
+    const overlay = document.getElementById("overlay");
+
+    function setMenu(open) {
+      drawer.classList.toggle("is-open", open);
+      drawer.setAttribute("aria-hidden", String(!open));
+      overlay.hidden = !open;
+    }
+
+    menuBtn.addEventListener("click", () => setMenu(true));
+    document.getElementById("menu-close").addEventListener("click", () => setMenu(false));
+    overlay.addEventListener("click", () => setMenu(false));
+
+    renderStats();
+  </script>
+</body>
+</html>

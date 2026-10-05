@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lịch dạy - Trang chủ</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Style cho ngày có lịch dạy */
+    .day.has-schedule {
+      position: relative;
+      font-weight: 600;
+    }
+
+    /* Dấu chấm tròn màu xanh đánh dấu ngày có lịch */
+    .day.has-schedule::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 5px;
+      height: 5px;
+      background-color: #007aff;
+      border-radius: 50%;
+    }
+
+    /* Đổi màu chấm tròn thành trắng nếu ngày đó đang được chọn */
+    .day.is-selected.has-schedule::after {
+      background-color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <header class="topbar">
+      <button class="menu-btn" id="menu-btn" aria-label="Mở menu" aria-expanded="false" aria-controls="menu">
+        <span></span><span></span><span></span>
+      </button>
+      <h2 class="page-title">Trang chủ</h2>
+    </header>
+
+    <main class="content">
+      <section class="schedule-card" aria-label="Lịch dạy theo tuần">
+        <div class="week-header">
+          <button class="week-nav" id="prev-week" aria-label="Tuần trước">&#8249;</button>
+          <h1 id="week-range">Lịch dạy</h1>
+          <button class="week-nav" id="next-week" aria-label="Tuần sau">&#8250;</button>
+        </div>
+        <div class="week-days" id="week-days" role="group" aria-label="Các ngày trong tuần"></div>
+        <button class="today-btn" id="today-btn">Hôm nay</button>
+      </section>
+
+      <h3 class="day-heading" id="day-heading"></h3>
+      <div id="lessons" aria-live="polite"></div>
+    </main>
+
+    <!-- Overlay & Menu Drawer -->
+    <div class="overlay" id="overlay" hidden></div>
+    <nav class="drawer" id="menu" aria-label="Menu chính" aria-hidden="true">
+      <button class="drawer-close" id="menu-close" aria-label="Đóng menu">&times;</button>
+      <ul>
+        <li><a href="index.html" class="is-active" aria-current="page">Trang chủ</a></li>
+        <li><a href="schedule.html">Cập nhật lịch dạy</a></li>
+        <li><a href="students.html">Thêm học sinh</a></li>
+        <li><a href="stats.html">Tổng buổi dạy</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- Modal Popup Hủy ca & Dạy bù (Mặc định ẩn) -->
+  <div class="modal-overlay" id="cancel-modal" aria-hidden="true">
+    <div class="modal-card">
+      <h3 class="modal-title">Xử lý Hủy ca dạy</h3>
+      <p class="modal-text">Bạn muốn hủy ca dạy này hay xếp ngày dạy bù?</p>
+      
+      <div>
+        <label class="modal-label" for="makeup-date">Chọn ngày dạy bù (Nếu có):</label>
+        <input type="date" id="makeup-date" class="modal-input">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="btn-confirm-makeup" class="btn-modal btn-modal-primary">Xác nhận Dạy Bù</button>
+        <button type="button" id="btn-no-makeup" class="btn-modal btn-modal-danger">Hủy không dạy bù</button>
+        <button type="button" id="btn-close-modal" class="btn-modal btn-modal-secondary">Quay lại</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DAY_NAMES = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+    const DAY_FULL = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ nhật"];
+
+    const daysEl = document.getElementById("week-days");
+    const rangeEl = document.getElementById("week-range");
+
+    let selected = new Date();
+    let weekStart = getMonday(selected);
+    let activeCancelItem = null;
+
+    function getStudents() { return JSON.parse(localStorage.getItem('students')) || []; }
+    function getSchedules() { return JSON.parse(localStorage.getItem('schedules')) || []; }
+    function getAttendance() { return JSON.parse(localStorage.getItem('attendance')) || []; }
+    function saveAttendance(data) { localStorage.setItem('attendance', JSON.stringify(data)); }
+    function getMakeupSchedules() { return JSON.parse(localStorage.getItem('makeup_schedules')) || []; }
+    function saveMakeupSchedules(data) { localStorage.setItem('makeup_schedules', JSON.stringify(data)); }
+
+    // HÀM CHUẨN HÓA HỆ GIỜ 24H (HH:mm)
+    function format24h(timeStr) {
+      if (!timeStr) return '';
+      const [h, m] = timeStr.split(':');
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    function getMonday(date) {
+      const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const offset = (d.getDay() + 6) % 7;
+      d.setDate(d.getDate() - offset);
+      return d;
+    }
+
+    function sameDay(a, b) {
+      return a.getFullYear() === b.getFullYear() &&
+             a.getMonth() === b.getMonth() &&
+             a.getDate() === b.getDate();
+    }
+
+    function formatDate(date) {
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+
+    function pad(n) { return String(n).padStart(2, "0"); }
+
+    function calcMinutes(startTime, endTime) {
+      if (!startTime || !endTime) return 0;
+      const [h1, m1] = startTime.split(':').map(Number);
+      const [h2, m2] = endTime.split(':').map(Number);
+      return (h2 * 60 + m2) - (h1 * 60 + m1);
+    }
+
+    const modal = document.getElementById('cancel-modal');
+    const makeupDateInput = document.getElementById('makeup-date');
+
+    function openModal() {
+      modal.classList.add('is-active');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeModal() {
+      modal.classList.remove('is-active');
+      modal.setAttribute('aria-hidden', 'true');
+      activeCancelItem = null;
+    }
+
+    window.openCancelModal = function(scheduleId, studentId, startTime, endTime) {
+      activeCancelItem = { 
+        scheduleId, 
+        studentId, 
+        startTime, 
+        endTime, 
+        date: formatDate(selected) 
+      };
+      makeupDateInput.value = '';
+      openModal();
+    };
+
+    // Kiểm tra xem một ngày cụ thể có lịch dạy hay không
+    function checkHasSchedule(targetDate) {
+      const idx = (targetDate.getDay() + 6) % 7;
+      const dateStr = formatDate(targetDate);
+      
+      const allSchedules = getSchedules();
+      const makeups = getMakeupSchedules();
+
+      const hasRegular = allSchedules.some(s => {
+        const isCorrectDay = parseInt(s.dayOfWeek) === idx;
+        if (!s.repeat || s.repeat === 'weekly') return isCorrectDay;
+        if (s.repeat === 'once') return s.singleDate === dateStr;
+        return false;
+      });
+
+      if (hasRegular) return true;
+
+      const hasMakeup = makeups.some(m => m.date === dateStr);
+      return hasMakeup;
+    }
+
+    function renderLessons() {
+      const idx = (selected.getDay() + 6) % 7;
+      const today = new Date();
+      const selectedDateStr = formatDate(selected);
+      const label = sameDay(selected, today) ? "Hôm nay" : DAY_FULL[idx];
+      
+      document.getElementById("day-heading").textContent =
+        `${label}, ${pad(selected.getDate())}/${pad(selected.getMonth() + 1)}`;
+
+      const allSchedules = getSchedules();
+      const allStudents = getStudents();
+      const attendance = getAttendance();
+      const makeups = getMakeupSchedules();
+
+      // 1. Ca dạy cố định hàng tuần hoặc chỉ 1 lần
+      let daySchedules = allSchedules.filter(s => {
+        const isCorrectDay = parseInt(s.dayOfWeek) === idx;
+        if (!s.repeat || s.repeat === 'weekly') {
+          return isCorrectDay;
+        }
+        if (s.repeat === 'once') {
+          return s.singleDate === selectedDateStr;
+        }
+        return false;
+      }).map(s => ({ ...s, isMakeup: false }));
+
+      // 2. Ca dạy bù đúng ngày đã chọn
+      const todayMakeups = makeups
+        .filter(m => m.date === selectedDateStr)
+        .map(m => ({ ...m, isMakeup: true }));
+
+      let combinedLessons = [...daySchedules, ...todayMakeups];
+      combinedLessons.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+      const box = document.getElementById("lessons");
+
+      if (combinedLessons.length === 0) {
+        box.innerHTML = '<p class="empty-state">Không có buổi dạy nào trong ngày này</p>';
+        return;
+      }
+
+      box.innerHTML = combinedLessons.map((item) => {
+        const student = allStudents.find(st => st.id === item.studentId);
+        const studentName = student ? student.name : 'Học sinh không xác định';
+        
+        // ĐỊNH DẠNG GIỜ 24H HIỂN THỊ
+        const start24 = format24h(item.startTime);
+        const end24 = format24h(item.endTime);
+        const displayTime = end24 ? `${start24} - ${end24}` : start24;
+        
+        const att = attendance.find(a => a.scheduleId === item.id && a.date === selectedDateStr);
+        
+        let actionHTML = `
+          <button class="btn btn-accept" onclick="confirmLesson('${item.id}', '${item.studentId}', '${item.startTime}', '${item.endTime}', ${item.isMakeup})" aria-label="Đồng ý"></button>
+          <button class="btn btn-decline" onclick="openCancelModal('${item.id}', '${item.studentId}', '${item.startTime}', '${item.endTime}')" aria-label="Từ chối/Hủy"></button>
+        `;
+
+        if (att) {
+          if (att.status === 'completed') {
+            actionHTML = `<span class="status-badge badge-completed">Đã dạy (${att.sessionCount} buổi)</span>`;
+          } else if (att.status === 'cancelled') {
+            actionHTML = `<span class="status-badge badge-cancelled">Đã hủy ${att.hasMakeup ? '(Có dạy bù)' : ''}</span>`;
+          }
+        }
+
+        return `
+          <section class="lesson">
+            <p class="lesson-time">
+              Thời gian: ${displayTime} 
+              ${item.isMakeup ? '<strong>(Dạy bù)</strong>' : ''}
+            </p>
+            <div class="lesson-row">
+              <div class="student-name">${studentName}</div>
+              <div>${actionHTML}</div>
+            </div>
+          </section>`;
+      }).join("");
+    }
+
+    window.confirmLesson = function(scheduleId, studentId, startTime, endTime, isMakeup) {
+      const selectedDateStr = formatDate(selected);
+      const minutes = calcMinutes(startTime, endTime);
+      
+      let sessionCount = 1;
+      if (minutes >= 120) {
+        sessionCount = 2;
+      } else if (minutes >= 100) {
+        sessionCount = 1.5;
+      }
+
+      let attendance = getAttendance();
+      attendance = attendance.filter(a => !(a.scheduleId === scheduleId && a.date === selectedDateStr));
+
+      attendance.push({
+        id: 'att_' + Date.now(),
+        scheduleId,
+        studentId,
+        date: selectedDateStr,
+        minutes,
+        sessionCount,
+        status: 'completed'
+      });
+
+      saveAttendance(attendance);
+
+      if (isMakeup) {
+        let makeups = getMakeupSchedules();
+        makeups = makeups.filter(m => m.id !== scheduleId);
+        saveMakeupSchedules(makeups);
+      }
+
+      renderLessons();
+      render(); // Tải lại để cập nhật chấm highlight nếu có sự thay đổi
+    };
+
+    document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+
+    document.getElementById('btn-no-makeup').addEventListener('click', () => {
+      if (!activeCancelItem) return;
+      
+      let attendance = getAttendance();
+      attendance.push({
+        id: 'att_' + Date.now(),
+        scheduleId: activeCancelItem.scheduleId,
+        studentId: activeCancelItem.studentId,
+        date: activeCancelItem.date,
+        status: 'cancelled',
+        hasMakeup: false
+      });
+
+      saveAttendance(attendance);
+      closeModal();
+      renderLessons();
+    });
+
+    document.getElementById('btn-confirm-makeup').addEventListener('click', () => {
+      const makeupDate = makeupDateInput.value;
+      if (!makeupDate) {
+        alert("Vui lòng chọn ngày dạy bù!");
+        return;
+      }
+
+      let attendance = getAttendance();
+      attendance.push({
+        id: 'att_' + Date.now(),
+        scheduleId: activeCancelItem.scheduleId,
+        studentId: activeCancelItem.studentId,
+        date: activeCancelItem.date,
+        status: 'cancelled',
+        hasMakeup: true,
+        makeupDate
+      });
+      saveAttendance(attendance);
+
+      let makeups = getMakeupSchedules();
+      makeups.push({
+        id: 'mb_' + Date.now(),
+        studentId: activeCancelItem.studentId,
+        date: makeupDate,
+        startTime: activeCancelItem.startTime,
+        endTime: activeCancelItem.endTime
+      });
+      saveMakeupSchedules(makeups);
+
+      closeModal();
+      alert(`Đã xếp lịch dạy bù vào ngày ${makeupDate}`);
+      renderLessons();
+      render(); // Tải lại để hiển thị highlight trên ngày có lịch bù mới
+    });
+
+    function render() {
+      const today = new Date();
+      daysEl.innerHTML = "";
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart);
+        d.setDate(weekStart.getDate() + i);
+
+        const btn = document.createElement("button");
+        btn.className = "day";
+        if (sameDay(d, today)) btn.classList.add("is-today");
+        if (sameDay(d, selected)) btn.classList.add("is-selected");
+
+        // HIGHLIGHT NGÀY CÓ LỊCH DẠY
+        if (checkHasSchedule(d)) {
+          btn.classList.add("has-schedule");
+        }
+
+        btn.setAttribute("aria-pressed", sameDay(d, selected));
+        btn.innerHTML =
+          `<span class="day-name">${DAY_NAMES[i]}</span>` +
+          `<span class="day-num">${d.getDate()}</span>`;
+        btn.addEventListener("click", () => { selected = d; render(); });
+        daysEl.appendChild(btn);
+      }
+
+      const end = new Date(weekStart);
+      end.setDate(weekStart.getDate() + 6);
+      rangeEl.textContent =
+        `${pad(weekStart.getDate())}/${pad(weekStart.getMonth() + 1)} – ` +
+        `${pad(end.getDate())}/${pad(end.getMonth() + 1)}/${end.getFullYear()}`;
+
+      renderLessons();
+    }
+
+    function shiftWeek(n) {
+      weekStart.setDate(weekStart.getDate() + n * 7);
+      render();
+    }
+
+    document.getElementById("prev-week").addEventListener("click", () => shiftWeek(-1));
+    document.getElementById("next-week").addEventListener("click", () => shiftWeek(1));
+    document.getElementById("today-btn").addEventListener("click", () => {
+      selected = new Date();
+      weekStart = getMonday(selected);
+      render();
+    });
+
+    const menuBtn = document.getElementById("menu-btn");
+    const drawer = document.getElementById("menu");
+    const overlay = document.getElementById("overlay");
+
+    function setMenu(open) {
+      drawer.classList.toggle("is-open", open);
+      drawer.setAttribute("aria-hidden", String(!open));
+      menuBtn.setAttribute("aria-expanded", String(open));
+      overlay.hidden = !open;
+    }
+
+    menuBtn.addEventListener("click", () => setMenu(true));
+    document.getElementById("menu-close").addEventListener("click", () => setMenu(false));
+    overlay.addEventListener("click", () => setMenu(false));
+
+    render();
+  </script>
+</body>
+</html>
